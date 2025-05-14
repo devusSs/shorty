@@ -52,7 +52,10 @@ func (e *Env) String() string {
 	return fmt.Sprintf("%+v", *e)
 }
 
-const minSecretLength = 32
+const (
+	minAccessSecretLength  = 32
+	minRefreshSecretLength = 48
+)
 
 func (e *Env) validate() error {
 	u, err := url.Parse(e.PostgresDSN)
@@ -75,18 +78,18 @@ func (e *Env) validate() error {
 		return fmt.Errorf("failed to decode refresh token secret from base64: %w", err)
 	}
 
-	if len(accessSecret) < minSecretLength {
+	if len(accessSecret) < minAccessSecretLength {
 		return fmt.Errorf(
 			"access token secret below min length: want: %d, got: %d",
-			minSecretLength,
+			minAccessSecretLength,
 			len(accessSecret),
 		)
 	}
 
-	if len(refreshSecret) < minSecretLength {
+	if len(refreshSecret) < minRefreshSecretLength {
 		return fmt.Errorf(
 			"refresh token secret below min length: want: %d, got: %d",
-			minSecretLength,
+			minRefreshSecretLength,
 			len(refreshSecret),
 		)
 	}

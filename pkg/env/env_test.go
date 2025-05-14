@@ -26,7 +26,7 @@ func setValidEnvVars() {
 	)
 	_ = os.Setenv("SHORTY_SERVER_PORT", "8080")
 	_ = os.Setenv("SHORTY_ACCESS_TOKEN_SECRET", generateBase64Secret(32))
-	_ = os.Setenv("SHORTY_REFRESH_TOKEN_SECRET", generateBase64Secret(32))
+	_ = os.Setenv("SHORTY_REFRESH_TOKEN_SECRET", generateBase64Secret(48))
 	_ = os.Setenv("SHORTY_BACKEND_DOMAIN", "http://localhost:8080")
 }
 
@@ -113,7 +113,7 @@ func TestSetPrefix_AffectsLoading(t *testing.T) {
 		"postgres://user:pass@localhost:5432/dbname?sslmode=disable",
 	)
 	_ = os.Setenv("CUSTOM_ACCESS_TOKEN_SECRET", generateBase64Secret(32))
-	_ = os.Setenv("CUSTOM_REFRESH_TOKEN_SECRET", generateBase64Secret(32))
+	_ = os.Setenv("CUSTOM_REFRESH_TOKEN_SECRET", generateBase64Secret(48))
 	_ = os.Setenv("CUSTOM_BACKEND_DOMAIN", "http://custom:1234")
 
 	env.SetPrefix("CUSTOM_")
