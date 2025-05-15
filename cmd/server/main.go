@@ -27,7 +27,8 @@ func run() int {
 		logWarn("debug mode enabled, might leak sensitive data")
 
 		build := getBuild()
-		buildJSON, err := json.Marshal(getBuild())
+
+		buildJSON, err := json.Marshal(build)
 		if err != nil {
 			logError("could not marshal build json", slog.Any("err", err))
 		}
