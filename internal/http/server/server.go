@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"github.com/devusSs/shorty/internal/http/handlers"
+	"github.com/devusSs/shorty/internal/http/middlewares"
 	"github.com/devusSs/shorty/pkg/database"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type Server struct {
@@ -30,6 +32,8 @@ func NewServer(db *database.Queries, port uint16) *Server {
 
 func (s *Server) RegisterHandlers(accessSecret string, refreshSecret string) {
 	router := s.setup()
+	router.Use(middleware.RealIP)
+	router.Use(middlewares.Logging())
 
 	userHandler := handlers.NewUserHandler(s.db, accessSecret, refreshSecret)
 
