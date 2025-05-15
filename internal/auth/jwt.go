@@ -61,7 +61,11 @@ func (c *Claims) String() string {
 	return fmt.Sprintf("%+v", *c)
 }
 
-func (j *JWTService) Issue(tt TokenType, userID uuid.UUID, username string) (string, error) {
+func (j *JWTService) Issue(
+	tt TokenType,
+	userID uuid.UUID,
+	username string,
+) (string, time.Time, error) {
 	now := time.Now()
 
 	claims := Claims{
@@ -76,7 +80,12 @@ func (j *JWTService) Issue(tt TokenType, userID uuid.UUID, username string) (str
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return j.sign(token, tt)
+	signed, err := j.sign(token, tt)
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("failed to sign token: %w", err)
+	}
+
+	return signed, now.Add(tokenExpiry(tt)), nil
 }
 
 func (j *JWTService) Validate(signedToken string) (*Claims, error) {
