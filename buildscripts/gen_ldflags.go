@@ -15,11 +15,11 @@ func genLDFlags(version string) string {
 	releaseTag, date := releaseTag(version)
 	copyrightYear := strconv.Itoa(date.Year())
 	ldflagsStr := "-s -w"
-	ldflagsStr += " -X github.com/devusSs/shorty/cmd/server.Version=" + version
-	ldflagsStr += " -X github.com/devusSs/shorty/cmd/server.CopyrightYear=" + copyrightYear
-	ldflagsStr += " -X github.com/devusSs/shorty/cmd/server.ReleaseTag=" + releaseTag
-	ldflagsStr += " -X github.com/devusSs/shorty/cmd/server.CommitID=" + commitID()
-	ldflagsStr += " -X github.com/devusSs/shorty/cmd/server.ShortCommitID=" + commitID()[:12]
+	ldflagsStr += " -X main.Version=" + version
+	ldflagsStr += " -X main.CopyrightYear=" + copyrightYear
+	ldflagsStr += " -X main.ReleaseTag=" + releaseTag
+	ldflagsStr += " -X main.CommitID=" + commitID()
+	ldflagsStr += " -X main.ShortCommitID=" + commitID()[:12]
 	return ldflagsStr
 }
 
