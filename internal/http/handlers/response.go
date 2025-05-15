@@ -24,3 +24,18 @@ func sendJSON(w http.ResponseWriter, code int, data any) {
 func sendError(w http.ResponseWriter, code int, msg string) {
 	sendJSON(w, code, map[string]string{"error": msg})
 }
+
+func sendText(w http.ResponseWriter, code int, msg string) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(code)
+
+	_, err := w.Write([]byte(msg))
+	if err != nil {
+		slog.With(slog.String("prefix", "send_text")).
+			Error("could not send text response", slog.Any("err", err))
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
