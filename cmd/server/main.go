@@ -8,9 +8,10 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-
+	"github.com/devusSs/shorty/internal/http/server"
+	"github.com/devusSs/shorty/pkg/database"
 	"github.com/devusSs/shorty/pkg/env"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -45,6 +46,14 @@ func run() int {
 
 	logDebug("connected to database", slog.String("dsn", env.PostgresDSN))
 
+	srv := server.NewServer(database.New(dbConn), env.ServerPort)
+	srv.RegisterHandlers()
+	err = srv.Start(ctx)
+	if err != nil {
+		logError("failed to start server", slog.Any("err", err))
+		return 1
+	}
+
 	return 0
 }
 
@@ -55,13 +64,13 @@ func isDev() bool {
 }
 
 func logWarn(msg string, args ...any) {
-	slog.With("prefix", "main").Warn(msg, args...)
+	slog.With(slog.String("prefix", "main")).Warn(msg, args...)
 }
 
 func logError(msg string, args ...any) {
-	slog.With("prefix", "main").Error(msg, args...)
+	slog.With(slog.String("prefix", "main")).Error(msg, args...)
 }
 
 func logDebug(msg string, args ...any) {
-	slog.With("prefix", "main").Debug(msg, args...)
+	slog.With(slog.String("prefix", "main")).Debug(msg, args...)
 }
