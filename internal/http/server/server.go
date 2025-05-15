@@ -28,14 +28,15 @@ func NewServer(db *database.Queries, port uint16) *Server {
 	}
 }
 
-func (s *Server) RegisterHandlers() {
+func (s *Server) RegisterHandlers(accessSecret string, refreshSecret string) {
 	router := s.setup()
 
-	userHandler := handlers.NewUserHandler(s.db)
+	userHandler := handlers.NewUserHandler(s.db, accessSecret, refreshSecret)
 
 	router.Route("/api/v1", func(api chi.Router) {
 		api.Route("/users", func(users chi.Router) {
 			users.Post("/register", userHandler.Register)
+			users.Post("/login", userHandler.Login)
 		})
 	})
 }
