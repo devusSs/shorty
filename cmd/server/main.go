@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -24,6 +25,18 @@ func run() int {
 		env.SetEnvFile(".env")
 		env.SetPrefix("DEV_SHORTY_")
 		logWarn("debug mode enabled, might leak sensitive data")
+
+		build := getBuild()
+		buildJSON, err := json.Marshal(getBuild())
+		if err != nil {
+			logError("could not marshal build json", slog.Any("err", err))
+		}
+
+		logDebug(
+			"getBuild()",
+			slog.String("build_string", build.String()),
+			slog.String("build_json", string(buildJSON)),
+		)
 	}
 
 	env, err := env.Load()
