@@ -61,7 +61,7 @@ func run() int {
 	logDebug("connected to database", slog.String("dsn", env.PostgresDSN))
 
 	srv := server.NewServer(database.New(dbConn), env.ServerPort)
-	srv.RegisterHandlers()
+	srv.RegisterHandlers(env.AccessTokenSecret, env.RefreshTokenSecret)
 	err = srv.Start(ctx)
 	if err != nil {
 		logError("failed to start server", slog.Any("err", err))
