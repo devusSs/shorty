@@ -8,6 +8,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type RegisterToken struct {
+	ID        pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	Username  string
+	Used      bool
+}
+
 type User struct {
 	ID        pgtype.UUID
 	CreatedAt pgtype.Timestamptz
