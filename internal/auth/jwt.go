@@ -89,32 +89,42 @@ func (j *JWTService) Issue(
 }
 
 func (j *JWTService) Validate(signedToken string) (*Claims, error) {
-	claims := &Claims{}
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
-
-	accessToken, err := parser.ParseWithClaims(
+	token, err := jwt.ParseWithClaims(
 		signedToken,
-		claims,
-		func(token *jwt.Token) (any, error) {
-			return []byte(j.accessSecret), nil
+		&Claims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+
+			claims, ok := token.Claims.(*Claims)
+			if !ok {
+				return nil, errors.New("invalid token claims")
+			}
+
+			switch claims.Type {
+			case TokenTypeAccess:
+				return []byte(j.accessSecret), nil
+			case TokenTypeRefresh:
+				return []byte(j.refreshSecret), nil
+			default:
+				return nil, errors.New("invalid token type")
+			}
 		},
 	)
-	if err == nil && accessToken.Valid && claims.Type == TokenTypeAccess {
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		if err := validateRegisteredClaims(claims); err != nil {
+			return nil, err
+		}
 		return claims, nil
 	}
 
-	refreshToken, err := parser.ParseWithClaims(
-		signedToken,
-		claims,
-		func(token *jwt.Token) (any, error) {
-			return []byte(j.refreshSecret), nil
-		},
-	)
-	if err == nil && refreshToken.Valid && claims.Type == TokenTypeRefresh {
-		return claims, nil
-	}
-
-	return nil, errors.New("invalid or malformed token")
+	return nil, errors.New("invalid token")
 }
 
 func (j *JWTService) sign(token *jwt.Token, tt TokenType) (string, error) {
@@ -143,4 +153,18 @@ func tokenExpiry(tt TokenType) time.Duration {
 	default:
 		return invalidTokenExpiry
 	}
+}
+
+func validateRegisteredClaims(claims *Claims) error {
+	now := time.Now()
+
+	if exp, err := claims.GetExpirationTime(); err != nil || exp == nil || now.After(exp.Time) {
+		return errors.New("token is expired")
+	}
+
+	if nbf, err := claims.GetNotBefore(); err == nil && nbf != nil && now.Before(nbf.Time) {
+		return errors.New("token not valid yet (nbf)")
+	}
+
+	return nil
 }
