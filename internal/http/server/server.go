@@ -43,6 +43,11 @@ func (s *Server) RegisterHandlers(accessSecret string, refreshSecret string) {
 		api.Route("/users", func(users chi.Router) {
 			users.Post("/register", userHandler.Register)
 			users.Post("/login", userHandler.Login)
+
+			users.Group(func(protected chi.Router) {
+				protected.Use(middlewares.AuthMiddleware)
+				protected.Get("/me", userHandler.GetUser)
+			})
 		})
 	})
 }
