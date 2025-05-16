@@ -125,6 +125,16 @@ func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	action, err := u.db.CreateUserAction(r.Context(), database.CreateUserActionParams{
+		UserID: user.ID,
+		Action: database.UserActionTypeUserRegister,
+	})
+	if err != nil {
+		u.logError("Register", slog.String("action", "user_registered"), slog.Any("err", err))
+	} else {
+		u.logDebug("Register", slog.String("action", "user_registered"), slog.Any("data", action))
+	}
+
 	type registerUserResponse struct {
 		UserID   string `json:"user_id"`
 		Username string `json:"username"`
@@ -198,6 +208,16 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	action, err := u.db.CreateUserAction(r.Context(), database.CreateUserActionParams{
+		UserID: user.ID,
+		Action: database.UserActionTypeUserLogin,
+	})
+	if err != nil {
+		u.logError("Login", slog.String("action", "user_logged_in"), slog.Any("err", err))
+	} else {
+		u.logDebug("Login", slog.String("action", "user_logged_in"), slog.Any("data", action))
+	}
+
 	type userLoginResponse struct {
 		AccessToken        string `json:"access_token"`
 		RefreshToken       string `json:"refresh_token"`
@@ -214,12 +234,6 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Note:               "Never share these tokens with anyone.",
 	}
 
-	u.logInfo(
-		"Login",
-		slog.String("action", "user_logged_in"),
-		slog.String("user_id", user.ID.String()),
-		slog.String("username", user.Username),
-	)
 	sendJSON(w, http.StatusOK, resp)
 }
 
@@ -229,4 +243,8 @@ func (u *UserHandler) logError(msg string, args ...any) {
 
 func (u *UserHandler) logInfo(msg string, args ...any) {
 	slog.With(slog.String("prefix", "user_handler")).Info(msg, args...)
+}
+
+func (u *UserHandler) logDebug(msg string, args ...any) {
+	slog.With(slog.String("prefix", "user_handler")).Debug(msg, args...)
 }
