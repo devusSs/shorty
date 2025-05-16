@@ -36,7 +36,7 @@ func (s *Server) RegisterHandlers(accessSecret string, refreshSecret string) {
 	router.Use(middlewares.Logging())
 
 	userHandler := handlers.NewUserHandler(s.db, accessSecret, refreshSecret)
-	tokenHandler := handlers.NewTokenHandler(accessSecret, refreshSecret)
+	tokenHandler := handlers.NewTokenHandler(s.db, accessSecret, refreshSecret)
 
 	router.Route("/api/v1", func(api chi.Router) {
 		api.Get("/health", handlers.HealthEndpoint)
