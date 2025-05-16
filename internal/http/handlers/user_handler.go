@@ -10,6 +10,7 @@ import (
 	"github.com/devusSs/shorty/internal/auth"
 	"github.com/devusSs/shorty/internal/hashing"
 	"github.com/devusSs/shorty/internal/http/handlers/validators"
+	"github.com/devusSs/shorty/internal/http/middlewares"
 	"github.com/devusSs/shorty/pkg/database"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -232,6 +233,57 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		AccessTokenExpiry:  atExpiry.Format(time.RFC3339Nano),
 		RefreshTokenExpiry: rtExpiry.Format(time.RFC3339Nano),
 		Note:               "Never share these tokens with anyone.",
+	}
+
+	sendJSON(w, http.StatusOK, resp)
+}
+
+func (u *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	// this cannot be nil since the auth middleware checks that
+	// and the type cast should also work, else it must be an internal error
+	authToken, ok := r.Context().Value(middlewares.TokenContextKey).(string)
+	if !ok {
+		u.logError("GetUser", slog.String("action", "type_cast_auth_token"))
+		sendError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	claims, err := u.jwtService.Validate(authToken)
+	if err != nil {
+		sendError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	if claims.Type != auth.TokenTypeAccess {
+		sendError(w, http.StatusUnauthorized, "token must be a valid access token")
+		return
+	}
+
+	userID := pgtype.UUID{Bytes: claims.UserID, Valid: true}
+	user, err := u.db.GetUserByID(r.Context(), userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			sendError(w, http.StatusNotFound, "user_id does not exist")
+			return
+		}
+
+		u.logError("GetUser", slog.String("action", "get_user_by_id"), slog.Any("err", err))
+		sendError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	type userResponse struct {
+		UserID    string `json:"user_id"`
+		CreatedAt string `json:"created_at"`
+		UpdatedAt string `json:"updated_at"`
+		Username  string `json:"username"`
+	}
+
+	resp := &userResponse{
+		UserID:    user.ID.String(),
+		CreatedAt: user.CreatedAt.Time.Format(time.RFC3339Nano),
+		UpdatedAt: user.UpdatedAt.Time.Format(time.RFC3339Nano),
+		Username:  user.Username,
 	}
 
 	sendJSON(w, http.StatusOK, resp)
