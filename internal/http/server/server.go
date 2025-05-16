@@ -36,6 +36,7 @@ func (s *Server) RegisterHandlers(accessSecret string, refreshSecret string) {
 	router.Use(middlewares.Logging())
 
 	userHandler := handlers.NewUserHandler(s.db, accessSecret, refreshSecret)
+	tokenHandler := handlers.NewTokenHandler(accessSecret, refreshSecret)
 
 	router.Route("/api/v1", func(api chi.Router) {
 		api.Get("/health", handlers.HealthEndpoint)
@@ -48,6 +49,15 @@ func (s *Server) RegisterHandlers(accessSecret string, refreshSecret string) {
 				protected.Use(middlewares.AuthMiddleware)
 				protected.Get("/me", userHandler.GetUser)
 			})
+		})
+
+		api.Route("/token", func(token chi.Router) {
+			token.Group(func(protected chi.Router) {
+				protected.Use(middlewares.AuthMiddleware)
+				protected.Get("/validate", tokenHandler.Validate)
+			})
+
+			token.Post("/renew", tokenHandler.Renew)
 		})
 	})
 }
