@@ -14,8 +14,10 @@ import (
 type UserActionType string
 
 const (
-	UserActionTypeUserRegister UserActionType = "user_register"
-	UserActionTypeUserLogin    UserActionType = "user_login"
+	UserActionTypeUserRegister   UserActionType = "user_register"
+	UserActionTypeUserLogin      UserActionType = "user_login"
+	UserActionTypeTokenValidated UserActionType = "token_validated"
+	UserActionTypeTokenRenewed   UserActionType = "token_renewed"
 )
 
 func (e *UserActionType) Scan(src interface{}) error {
