@@ -5,6 +5,7 @@ package env
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -65,7 +66,7 @@ func (e *Env) validate() error {
 
 	q := u.Query()
 	if !q.Has("sslmode") {
-		return fmt.Errorf("missing ssl mode in postgres dsn")
+		return errors.New("missing ssl mode in postgres dsn")
 	}
 
 	accessSecret, err := base64.StdEncoding.DecodeString(e.AccessTokenSecret)

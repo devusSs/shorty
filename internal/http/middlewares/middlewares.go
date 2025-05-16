@@ -54,13 +54,15 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+const tokenSplitN = 2
+
 func extractToken(r *http.Request) string {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return ""
 	}
 
-	parts := strings.SplitN(authHeader, " ", 2)
+	parts := strings.SplitN(authHeader, " ", tokenSplitN)
 	if len(parts) != 2 || parts[0] != "Bearer" {
 		return ""
 	}

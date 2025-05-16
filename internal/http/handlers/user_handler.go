@@ -36,6 +36,7 @@ func NewUserHandler(db *database.Queries, accessSecret string, refreshSecret str
 	}
 }
 
+//nolint:funlen // too many statements, yea nah bro
 func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	type registerUserRequest struct {
 		Username      string `json:"username"       validate:"required,min=6,max=16"`

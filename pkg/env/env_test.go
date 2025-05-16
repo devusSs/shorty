@@ -56,7 +56,7 @@ func TestLoad_ValidEnv(t *testing.T) {
 func TestLoad_InvalidDSN(t *testing.T) {
 	clearEnvVars()
 	setValidEnvVars()
-	_ = os.Setenv("SHORTY_POSTGRES_DSN", "not-a-valid-dsn")
+	t.Setenv("SHORTY_POSTGRES_DSN", "not-a-valid-dsn")
 
 	_, err := env.Load()
 	require.Error(t, err)
@@ -67,7 +67,7 @@ func TestLoad_InvalidDSN(t *testing.T) {
 func TestLoad_MissingSSLMode(t *testing.T) {
 	clearEnvVars()
 	setValidEnvVars()
-	_ = os.Setenv("SHORTY_POSTGRES_DSN", "postgres://user:pass@localhost:5432/dbname")
+	t.Setenv("SHORTY_POSTGRES_DSN", "postgres://user:pass@localhost:5432/dbname")
 
 	_, err := env.Load()
 	require.Error(t, err)
@@ -77,7 +77,7 @@ func TestLoad_MissingSSLMode(t *testing.T) {
 func TestLoad_InvalidAccessTokenBase64(t *testing.T) {
 	clearEnvVars()
 	setValidEnvVars()
-	_ = os.Setenv("SHORTY_ACCESS_TOKEN_SECRET", "not-base64!")
+	t.Setenv("SHORTY_ACCESS_TOKEN_SECRET", "not-base64!")
 
 	_, err := env.Load()
 	require.Error(t, err)
@@ -87,7 +87,7 @@ func TestLoad_InvalidAccessTokenBase64(t *testing.T) {
 func TestLoad_InvalidRefreshTokenBase64(t *testing.T) {
 	clearEnvVars()
 	setValidEnvVars()
-	_ = os.Setenv("SHORTY_REFRESH_TOKEN_SECRET", "also-not-base64")
+	t.Setenv("SHORTY_REFRESH_TOKEN_SECRET", "also-not-base64")
 
 	_, err := env.Load()
 	require.Error(t, err)
@@ -98,8 +98,8 @@ func TestLoad_TooShortSecrets(t *testing.T) {
 	clearEnvVars()
 	setValidEnvVars()
 
-	_ = os.Setenv("SHORTY_ACCESS_TOKEN_SECRET", generateBase64Secret(16))
-	_ = os.Setenv("SHORTY_REFRESH_TOKEN_SECRET", generateBase64Secret(16))
+	t.Setenv("SHORTY_ACCESS_TOKEN_SECRET", generateBase64Secret(16))
+	t.Setenv("SHORTY_REFRESH_TOKEN_SECRET", generateBase64Secret(16))
 
 	_, err := env.Load()
 	require.Error(t, err)
@@ -108,13 +108,13 @@ func TestLoad_TooShortSecrets(t *testing.T) {
 
 func TestSetPrefix_AffectsLoading(t *testing.T) {
 	clearEnvVars()
-	_ = os.Setenv(
+	t.Setenv(
 		"CUSTOM_POSTGRES_DSN",
 		"postgres://user:pass@localhost:5432/dbname?sslmode=disable",
 	)
-	_ = os.Setenv("CUSTOM_ACCESS_TOKEN_SECRET", generateBase64Secret(32))
-	_ = os.Setenv("CUSTOM_REFRESH_TOKEN_SECRET", generateBase64Secret(48))
-	_ = os.Setenv("CUSTOM_BACKEND_DOMAIN", "http://custom:1234")
+	t.Setenv("CUSTOM_ACCESS_TOKEN_SECRET", generateBase64Secret(32))
+	t.Setenv("CUSTOM_REFRESH_TOKEN_SECRET", generateBase64Secret(48))
+	t.Setenv("CUSTOM_BACKEND_DOMAIN", "http://custom:1234")
 
 	env.SetPrefix("CUSTOM_")
 

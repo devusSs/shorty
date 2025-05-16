@@ -118,7 +118,8 @@ func (j *JWTService) Validate(signedToken string) (*Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		if err := validateRegisteredClaims(claims); err != nil {
+		err = validateRegisteredClaims(claims)
+		if err != nil {
 			return nil, err
 		}
 		return claims, nil
