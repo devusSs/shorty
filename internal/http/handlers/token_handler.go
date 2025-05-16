@@ -8,14 +8,21 @@ import (
 
 	"github.com/devusSs/shorty/internal/auth"
 	"github.com/devusSs/shorty/internal/http/middlewares"
+	"github.com/devusSs/shorty/pkg/database"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type TokenHandler struct {
+	db         *database.Queries
 	jwtService *auth.JWTService
 }
 
-func NewTokenHandler(accessSecret string, refreshSecret string) *TokenHandler {
-	return &TokenHandler{jwtService: auth.NewJWTService(accessSecret, refreshSecret)}
+func NewTokenHandler(
+	db *database.Queries,
+	accessSecret string,
+	refreshSecret string,
+) *TokenHandler {
+	return &TokenHandler{db: db, jwtService: auth.NewJWTService(accessSecret, refreshSecret)}
 }
 
 func (t *TokenHandler) Validate(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +39,16 @@ func (t *TokenHandler) Validate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		sendError(w, http.StatusUnauthorized, err.Error())
 		return
+	}
+
+	action, err := t.db.CreateUserAction(r.Context(), database.CreateUserActionParams{
+		UserID: pgtype.UUID{Bytes: claims.UserID, Valid: true},
+		Action: database.UserActionTypeTokenValidated,
+	})
+	if err != nil {
+		t.logError("Validate", slog.String("action", "token_validated"), slog.Any("err", err))
+	} else {
+		t.logDebug("Validate", slog.String("action", "token_validated"), slog.Any("data", action))
 	}
 
 	type tokenResponse struct {
@@ -85,6 +102,16 @@ func (t *TokenHandler) Renew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	action, err := t.db.CreateUserAction(r.Context(), database.CreateUserActionParams{
+		UserID: pgtype.UUID{Bytes: claims.UserID, Valid: true},
+		Action: database.UserActionTypeTokenRenewed,
+	})
+	if err != nil {
+		t.logError("Renew", slog.String("action", "token_renewed"), slog.Any("err", err))
+	} else {
+		t.logDebug("Renew", slog.String("action", "token_renewed"), slog.Any("data", action))
+	}
+
 	type renewResponse struct {
 		UserID             string `json:"user_id"`
 		RefreshTokenExpiry string `json:"refresh_token_expiry"`
@@ -104,4 +131,8 @@ func (t *TokenHandler) Renew(w http.ResponseWriter, r *http.Request) {
 
 func (t *TokenHandler) logError(msg string, args ...any) {
 	slog.With(slog.String("prefix", "token_handler")).Error(msg, args...)
+}
+
+func (t *TokenHandler) logDebug(msg string, args ...any) {
+	slog.With(slog.String("prefix", "token_handler")).Debug(msg, args...)
 }
