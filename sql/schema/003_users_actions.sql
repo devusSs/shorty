@@ -2,7 +2,7 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE user_action_type AS ENUM ('user_register', 'user_login');
+CREATE TYPE user_action_type AS ENUM ('user_register', 'user_login', 'token_validated', 'token_renewed');
 
 CREATE TABLE IF NOT EXISTS user_actions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
