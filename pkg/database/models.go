@@ -5,8 +5,53 @@
 package database
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type UserActionType string
+
+const (
+	UserActionTypeUserRegister UserActionType = "user_register"
+	UserActionTypeUserLogin    UserActionType = "user_login"
+)
+
+func (e *UserActionType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserActionType(s)
+	case string:
+		*e = UserActionType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserActionType: %T", src)
+	}
+	return nil
+}
+
+type NullUserActionType struct {
+	UserActionType UserActionType
+	Valid          bool // Valid is true if UserActionType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserActionType) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserActionType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserActionType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserActionType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserActionType), nil
+}
 
 type RegisterToken struct {
 	ID        pgtype.UUID
@@ -22,4 +67,12 @@ type User struct {
 	UpdatedAt pgtype.Timestamptz
 	Username  string
 	Password  string
+}
+
+type UserAction struct {
+	ID        pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	UserID    pgtype.UUID
+	Action    UserActionType
 }
