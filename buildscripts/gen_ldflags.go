@@ -1,5 +1,5 @@
 // copied and adapted from
-// https://github.com/shorty/shorty/blob/master/buildscripts/gen-ldflags.go
+// https://github.com/minio/minio/blob/master/buildscripts/gen-ldflags.go
 package main
 
 import (
